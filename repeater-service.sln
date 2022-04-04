@@ -1,0 +1,36 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30114.105
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AB9BF7D0-40B5-4743-B8CA-5B9E13CC316A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepeaterService", "src\RepeaterService\RepeaterService.csproj", "{012F7A1E-198B-4EB6-8498-2C5F2F2F01A6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{BEA99F30-C284-445D-8425-A412120B95CE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RepeaterService.Tests", "test\RepeaterService.Tests\RepeaterService.Tests.csproj", "{468DE277-B34F-4AA9-AE6B-473BDE103E6D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{012F7A1E-198B-4EB6-8498-2C5F2F2F01A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{012F7A1E-198B-4EB6-8498-2C5F2F2F01A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{012F7A1E-198B-4EB6-8498-2C5F2F2F01A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{012F7A1E-198B-4EB6-8498-2C5F2F2F01A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{468DE277-B34F-4AA9-AE6B-473BDE103E6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{468DE277-B34F-4AA9-AE6B-473BDE103E6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{468DE277-B34F-4AA9-AE6B-473BDE103E6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{468DE277-B34F-4AA9-AE6B-473BDE103E6D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{012F7A1E-198B-4EB6-8498-2C5F2F2F01A6} = {AB9BF7D0-40B5-4743-B8CA-5B9E13CC316A}
+		{468DE277-B34F-4AA9-AE6B-473BDE103E6D} = {BEA99F30-C284-445D-8425-A412120B95CE}
+	EndGlobalSection
+EndGlobal
