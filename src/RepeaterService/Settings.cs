@@ -58,7 +58,7 @@ internal record Repeat(string Name, Subscription Subscription, Destination Desti
 
 internal record Settings
 {
-    List<Repeat> Repeats { get; init; }
+    public List<Repeat> Repeats { get; init; }
 
     public Settings(List<Repeat> repeats)
     {

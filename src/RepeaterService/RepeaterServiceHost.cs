@@ -6,41 +6,57 @@ namespace RepeaterService;
 
 record TestRecord(string Name, int Age);
 
-public class RepeaterServiceHost : BackgroundService
+internal class RepeaterServiceHost : BackgroundService
 {
     private readonly ILogger<RepeaterServiceHost> _logger;
-    private readonly Bus _bus;
+    private readonly Settings _settings;
 
     public RepeaterServiceHost(ILogger<RepeaterServiceHost> logger)
     {
         _logger = logger;
-        _bus = new();
+
+        var sub = new Subscription(
+            "amqp://localhost",
+            BusType.RabbitMQ,
+            new() { "source_topic_one" });
+
+        var dest = new Destination(
+            "amqp://localhost",
+            BusType.RabbitMQ,
+            new() { ("*", "destination_topic_one") });
+
+        var repeat = new Repeat("rabbit_to_rabbit", sub, dest);
+        _settings = new(new() { repeat });
     }
 
     protected async override Task ExecuteAsync(CancellationToken cToken)
     {
-        var azureServiceHandler = async (string message) =>
-        {
-            _logger.LogInformation($"Got this message from bus: {message}");
-            await Task.CompletedTask;
-        };
-
         _logger.LogInformation($"Starting listening {nameof(RepeaterServiceHost)}.");
-        await _bus.Start(azureServiceHandler).ConfigureAwait(false);
+        var busses = _settings.Repeats.Select(r => BusPairFactory.Create(r)).ToList();
 
+        foreach (var bus in busses)
+        {
+            var handler = async (string message) =>
+            {
+                _logger.LogInformation($"Got this message from bus: {message}");
+                //await bus.Destination.Publish(bus.Repeat.Destination.Topics.First().topic, message);
+                await Task.CompletedTask;
+            };
+
+            await bus.Source.Start(handler).ConfigureAwait(false);
+        }
+
+        var buss = busses.First();
         while (!cToken.IsCancellationRequested)
         {
-            _logger.LogInformation("Sending message.");
+            _ = cToken.WaitHandle.WaitOne(1000);
             var message = JsonConvert.SerializeObject(new TestRecord("Rune", 28));
-            await _bus.Publish(
-                "my_topic_one", message).ConfigureAwait(false);
-            _ = cToken.WaitHandle.WaitOne(2000);
+            await buss.Source.Publish(buss.Repeat.Subscription.Topics.First(), message).ConfigureAwait(false);
         }
     }
 
     public override void Dispose()
     {
-        _bus.Dispose();
         base.Dispose();
     }
 }
