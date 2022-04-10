@@ -1,21 +1,28 @@
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace RepeaterService;
 
-public class RepeaterServiceHost : BackgroundService
+internal class RepeaterServiceHost : BackgroundService
 {
-    private readonly ILogger<RepeaterServiceHost> _logger;
+    private List<Repeater> _repeaters = new();
 
-    public RepeaterServiceHost(
-        ILogger<RepeaterServiceHost> logger)
+    public RepeaterServiceHost(IOptions<Settings> settings)
     {
-        _logger = logger;
+        _repeaters = settings.Value.Repeats.Select(x => new Repeater(x)).ToList();
     }
 
-    protected async override Task ExecuteAsync(CancellationToken cancellationToken)
+    protected async override Task ExecuteAsync(CancellationToken cToken)
     {
-        _logger.LogInformation($"Starting {nameof(RepeaterServiceHost)}.");
-        await Task.CompletedTask;
+        foreach (var repeater in _repeaters)
+            await repeater.Start().ConfigureAwait(false);
+    }
+
+    public override void Dispose()
+    {
+        foreach (var repeater in _repeaters)
+            repeater.Dispose();
+
+        base.Dispose();
     }
 }
