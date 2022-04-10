@@ -11,11 +11,13 @@ internal class RepeaterServiceHost : BackgroundService
 {
     private readonly ILogger<RepeaterServiceHost> _logger;
     private readonly Settings _settings;
+    private List<Repeater> _repeaters = new();
 
     public RepeaterServiceHost(ILogger<RepeaterServiceHost> logger)
     {
         _logger = logger;
 
+        // TODO move this to settings
         var sub = new Subscription(
             "amqp://localhost",
             BusType.RabbitMQ,
@@ -24,29 +26,19 @@ internal class RepeaterServiceHost : BackgroundService
         var dest = new Destination(
             "amqp://localhost",
             BusType.RabbitMQ,
-            new("my_header_name", new() { { "*", "dest_topic_one" } }));
+            new("rbs2-msg-type", new() { { "RepeaterService.TestRecordOne, RepeaterService", "dest_topic_one" } }));
 
         var repeat = new Repeat("rabbit_to_rabbit", sub, dest);
         _settings = new(new() { repeat });
+
+        _repeaters = _settings.Repeats.Select(x => new Repeater(x)).ToList();
     }
 
     protected async override Task ExecuteAsync(CancellationToken cToken)
     {
-        _logger.LogInformation($"Starting listening {nameof(RepeaterServiceHost)}.");
-        var busses = _settings.Repeats.Select(r => BusPairFactory.Create(r)).ToList();
-
-        foreach (var bus in busses)
-            await bus.Source.Start().ConfigureAwait(false);
-
-        var buss = busses.First();
-        while (!cToken.IsCancellationRequested)
-        {
-            _ = cToken.WaitHandle.WaitOne(1000);
-            // TODO use different types
-            var message = new TestRecordOne("Rune", 28);
-            await buss.Source.Publish(buss.Repeat.Subscription.Topics.First(), message)
-                .ConfigureAwait(false);
-        }
+        _logger.LogInformation($"Starting {nameof(RepeaterServiceHost)}.");
+        foreach (var repeater in _repeaters)
+            await repeater.Start().ConfigureAwait(false);
     }
 
     public override void Dispose()

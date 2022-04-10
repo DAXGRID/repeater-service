@@ -6,7 +6,6 @@ internal enum BusType
     AzureServiceBus
 }
 
-
 internal record DestinationTopic
 {
     public string HeaderName { get; init; }
