@@ -1,79 +1,33 @@
 namespace RepeaterService;
 
-internal enum BusType
-{
-    RabbitMQ,
-    AzureServiceBus
-}
-
 internal record DestinationTopic
 {
-    public string HeaderName { get; init; }
-    public Dictionary<string, string> DestinationMaps { get; init; }
-
-    public DestinationTopic(string headerName, Dictionary<string, string> destinationMaps)
-    {
-        HeaderName = headerName;
-        DestinationMaps = destinationMaps;
-    }
+    public string HeaderName { get; init; } = string.Empty;
+    public Dictionary<string, string> DestinationMaps { get; init; } = new();
 }
 
 internal record Destination
 {
-    public string ConnectionString { get; init; }
-    public BusType Type { get; init; }
-    public DestinationTopic TopicMapping { get; init; }
-
-    public Destination(
-        string connectionString,
-        BusType type,
-        DestinationTopic topicMapping)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new ArgumentException(
-                "Cannot be null or whitespace.", nameof(connectionString));
-        ConnectionString = connectionString;
-        Type = type;
-        TopicMapping = topicMapping;
-    }
+    public string ConnectionString { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+    public DestinationTopic TopicMapping { get; init; } = new();
 }
 
 internal record Subscription
 {
-    public string ConnectionString { get; init; }
-    public BusType Type { get; init; }
-    public List<string> Topics { get; init; }
-
-    public Subscription(
-        string connectionString,
-        BusType type,
-        List<string> topics)
-    {
-        if (string.IsNullOrWhiteSpace(connectionString))
-            throw new ArgumentException(
-                "Cannot be null or whitespace.", nameof(connectionString));
-        if (topics is null || topics.Count == 0)
-            throw new ArgumentException(
-                "Cannot be null or empty", nameof(topics));
-
-        ConnectionString = connectionString;
-        Type = type;
-        Topics = topics;
-    }
+    public string ConnectionString { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+    public List<string> Topics { get; init; } = new();
 }
 
-internal record RepeaterConfig(string Name, Subscription Subscription, Destination Destination);
+internal record RepeaterConfig
+{
+    public string Name { get; init; } = string.Empty;
+    public Subscription Subscription { get; init; } = new();
+    public Destination Destination { get; init; } = new();
+}
 
 internal record Settings
 {
-    public List<RepeaterConfig> Repeats { get; init; }
-
-    public Settings(List<RepeaterConfig> repeats)
-    {
-        if (repeats is null || repeats.Count == 0)
-            throw new ArgumentException(
-                "Cannot be null or empty", nameof(repeats));
-
-        Repeats = repeats;
-    }
+    public List<RepeaterConfig> Repeats { get; init; } = new();
 }

@@ -1,6 +1,7 @@
+using FakeItEasy;
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using System;
 using System.Collections.Generic;
@@ -22,23 +23,36 @@ public class RepeaterServiceTests
         var destTopic = Guid.NewGuid().ToString();
         var rabbitConnectionString = "amqp://localhost";
 
-        var sub = new Subscription(
-           rabbitConnectionString,
-           BusType.RabbitMQ,
-           new() { sourceTopic });
+        var sub = new Subscription
+        {
+            ConnectionString = rabbitConnectionString,
+            Type = "RabbitMQ",
+            Topics = new() { sourceTopic }
+        };
 
-        var dest = new Destination(
-            rabbitConnectionString,
-            BusType.RabbitMQ,
-            new("rbs2-msg-type", new()
+        var dest = new Destination
+        {
+            ConnectionString = rabbitConnectionString,
+            Type = "RabbitMQ",
+            TopicMapping = new()
             {
-                { "RepeaterService.Tests.TestMessageOne, RepeaterService.Tests", destTopic },
-                { "RepeaterService.Tests.TestMessageTwo, RepeaterService.Tests", destTopic }
-            }));
+                HeaderName = "rbs2-msg-type",
+                DestinationMaps = new()
+                {
+                    { "RepeaterService.Tests.TestMessageOne, RepeaterService.Tests", destTopic },
+                    { "RepeaterService.Tests.TestMessageTwo, RepeaterService.Tests", destTopic }
+                }
+            }
+        };
 
-        var repeat = new RepeaterConfig("rabbit_to_rabbit", sub, dest);
-        var settings = new Settings(new() { repeat });
+        var repeat = new RepeaterConfig
+        {
+            Name = "rabbit_to_rabbit",
+            Subscription = sub,
+            Destination = dest,
+        };
 
+        var settings = Microsoft.Extensions.Options.Options.Create(new Settings() { Repeats = new() { repeat } });
         var repeaterServiceHost = new RepeaterServiceHost(settings);
         await repeaterServiceHost.StartAsync(new());
 

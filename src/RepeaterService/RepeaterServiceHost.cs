@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace RepeaterService;
 
@@ -6,9 +7,9 @@ internal class RepeaterServiceHost : BackgroundService
 {
     private List<Repeater> _repeaters = new();
 
-    public RepeaterServiceHost(Settings settings)
+    public RepeaterServiceHost(IOptions<Settings> settings)
     {
-        _repeaters = settings.Repeats.Select(x => new Repeater(x)).ToList();
+        _repeaters = settings.Value.Repeats.Select(x => new Repeater(x)).ToList();
     }
 
     protected async override Task ExecuteAsync(CancellationToken cToken)

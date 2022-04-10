@@ -5,6 +5,7 @@ using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Transport;
+using System;
 using System.Text;
 
 namespace RepeaterService;
@@ -75,10 +76,10 @@ internal class Repeater : IDisposable
         var inputQueueName = $"{_repeat.Name}_subscription";
         switch (_repeat.Subscription.Type)
         {
-            case BusType.RabbitMQ:
+            case "RabbitMQ":
                 t.UseRabbitMq(_repeat.Subscription.ConnectionString, inputQueueName);
                 break;
-            case BusType.AzureServiceBus:
+            case "AzureServiceBus":
                 t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, inputQueueName);
                 break;
             default:
@@ -90,10 +91,10 @@ internal class Repeater : IDisposable
     {
         switch (_repeat.Destination.Type)
         {
-            case BusType.RabbitMQ:
+            case "RabbitMQ":
                 t.UseRabbitMqAsOneWayClient(_repeat.Destination.ConnectionString);
                 break;
-            case BusType.AzureServiceBus:
+            case "AzureServiceBus":
                 t.UseAzureServiceBusAsOneWayClient(_repeat.Destination.ConnectionString);
                 break;
             default:
