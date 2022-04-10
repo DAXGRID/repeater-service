@@ -11,12 +11,12 @@ public class BusPairFactoryTests
         var sub = new Subscription(
             "amqp://localhost",
             BusType.RabbitMQ,
-            new() { "my-topic-one", "my-topic-two" });
+            new() { "source_topic_one" });
 
         var dest = new Destination(
             "amqp://localhost",
             BusType.RabbitMQ,
-            new() { ("*", "topic-one") });
+            new("my_header_name", new() { { "*", "dest_topic_one" } }));
 
         var repeat = new Repeat("rabbit_to_rabbit", sub, dest);
 

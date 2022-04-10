@@ -1,10 +1,11 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 
 namespace RepeaterService;
 
-record TestRecord(string Name, int Age);
+record TestRecordOne(string Name, int Age);
+record TestRecordTwo(string Name, int Age);
+record TestRecordThree(string Name, int Age);
 
 internal class RepeaterServiceHost : BackgroundService
 {
@@ -23,7 +24,7 @@ internal class RepeaterServiceHost : BackgroundService
         var dest = new Destination(
             "amqp://localhost",
             BusType.RabbitMQ,
-            new() { ("*", "destination_topic_one") });
+            new("my_header_name", new() { { "*", "dest_topic_one" } }));
 
         var repeat = new Repeat("rabbit_to_rabbit", sub, dest);
         _settings = new(new() { repeat });
@@ -35,23 +36,16 @@ internal class RepeaterServiceHost : BackgroundService
         var busses = _settings.Repeats.Select(r => BusPairFactory.Create(r)).ToList();
 
         foreach (var bus in busses)
-        {
-            var handler = async (string message) =>
-            {
-                _logger.LogInformation($"Got this message from bus: {message}");
-                //await bus.Destination.Publish(bus.Repeat.Destination.Topics.First().topic, message);
-                await Task.CompletedTask;
-            };
-
-            await bus.Source.Start(handler).ConfigureAwait(false);
-        }
+            await bus.Source.Start().ConfigureAwait(false);
 
         var buss = busses.First();
         while (!cToken.IsCancellationRequested)
         {
             _ = cToken.WaitHandle.WaitOne(1000);
-            var message = JsonConvert.SerializeObject(new TestRecord("Rune", 28));
-            await buss.Source.Publish(buss.Repeat.Subscription.Topics.First(), message).ConfigureAwait(false);
+            // TODO use different types
+            var message = new TestRecordOne("Rune", 28);
+            await buss.Source.Publish(buss.Repeat.Subscription.Topics.First(), message)
+                .ConfigureAwait(false);
         }
     }
 

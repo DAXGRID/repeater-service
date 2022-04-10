@@ -1,5 +1,4 @@
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Serialization;
@@ -20,7 +19,7 @@ internal class Bus : IDisposable
         _repeat = repeat;
     }
 
-    public async Task Start(Func<string, Task> handler)
+    public async Task Start()
     {
         _activator.Handle<String>(async (_, x, _) =>
         {
@@ -35,10 +34,11 @@ internal class Bus : IDisposable
             .Options(o => o.Decorate<ISerializer>(c => new PlainJsonMessageSerializer(c.Get<ISerializer>())))
             .Start();
 
-        await _activator.Bus.Advanced.Topics.Subscribe("source_topic_one").ConfigureAwait(false);
+        foreach (var topic in _repeat.Subscription.Topics)
+            await _activator.Bus.Advanced.Topics.Subscribe(topic).ConfigureAwait(false);
     }
 
-    public async Task Publish(string topic, string message)
+    public async Task Publish(string topic, object message)
     {
         await _activator.Bus.Advanced.Topics.Publish(topic, message).ConfigureAwait(false);
     }

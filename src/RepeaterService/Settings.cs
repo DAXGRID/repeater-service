@@ -6,27 +6,36 @@ internal enum BusType
     AzureServiceBus
 }
 
+
+internal record DestinationTopic
+{
+    public string HeaderName { get; init; }
+    public Dictionary<string, string> DestinationMaps { get; init; }
+
+    public DestinationTopic(string headerName, Dictionary<string, string> destinationMaps)
+    {
+        HeaderName = headerName;
+        DestinationMaps = destinationMaps;
+    }
+}
+
 internal record Destination
 {
     public string ConnectionString { get; init; }
     public BusType Type { get; init; }
-    public List<(string header, string topic)> Topics { get; init; }
+    public DestinationTopic TopicMapping { get; init; }
 
     public Destination(
         string connectionString,
         BusType type,
-        List<(string header, string topic)> topics)
+        DestinationTopic topicMapping)
     {
         if (string.IsNullOrWhiteSpace(connectionString))
             throw new ArgumentException(
                 "Cannot be null or whitespace.", nameof(connectionString));
-        if (topics is null || topics.Count == 0)
-            throw new ArgumentException(
-                "Cannot be null or empty", nameof(topics));
-
         ConnectionString = connectionString;
         Type = type;
-        Topics = topics;
+        TopicMapping = topicMapping;
     }
 }
 
