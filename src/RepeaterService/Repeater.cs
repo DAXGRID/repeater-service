@@ -1,10 +1,8 @@
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Messages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Transport;
-using System.Text;
 
 namespace RepeaterService;
 
@@ -23,7 +21,7 @@ internal class Repeater : IDisposable
 
     public async Task Start()
     {
-        _activatorSource.Handle<String>(async (_, context, message) =>
+        _activatorSource.Handle<string>(async (_, context, message) =>
         {
             var destTopic = string.Empty;
             if (_repeat.Destination.TopicMapping.HeaderName == "*")
@@ -36,7 +34,6 @@ internal class Repeater : IDisposable
                 destTopic = _repeat.Destination.TopicMapping.DestinationMaps[headerValue];
             }
 
-            Console.WriteLine("HEADER: " + String.Join(", ", context.Headers.Select(k => $"{k.Key} : {k.Value}")));
             await Publish(destTopic, message, context.Headers).ConfigureAwait(false);
         });
 
@@ -65,7 +62,11 @@ internal class Repeater : IDisposable
         await _activatorDest.Bus.Advanced.Topics.Publish(topic, message, headers).ConfigureAwait(false);
     }
 
-    public void Dispose() => _activatorSource.Dispose();
+    public void Dispose()
+    {
+        _activatorSource.Dispose();
+        _activatorDest.Dispose();
+    }
 
     private void SetupTransportType(StandardConfigurer<ITransport> t, string queueNameExtension)
     {
@@ -80,19 +81,5 @@ internal class Repeater : IDisposable
             default:
                 throw new ArgumentException($"{_repeat.Subscription.Type} is not valid.", nameof(_repeat.Subscription.Type));
         }
-    }
-
-    private class PlainJsonMessageSerializer : ISerializer
-    {
-        readonly ISerializer _serializer;
-
-        public PlainJsonMessageSerializer(ISerializer serializer)
-            => _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
-
-        public Task<TransportMessage> Serialize(Message message)
-            => _serializer.Serialize(message);
-
-        public async Task<Message> Deserialize(TransportMessage transportMessage)
-            => await Task.FromResult(new Message(transportMessage.Headers, Encoding.UTF8.GetString(transportMessage.Body))).ConfigureAwait(false);
     }
 }
