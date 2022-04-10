@@ -1,23 +1,14 @@
 using Rebus.Activation;
 using Rebus.Config;
-using Rebus.Serialization.Json;
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
 namespace RepeaterService.Tests;
 
-public class TestMessageOne
-{
-    public string Content { get; set; }
-
-    public TestMessageOne(string content)
-    {
-        Content = content;
-    }
-}
+public record TestMessageOne(string Content);
+public record TestMessageTwo(string Content);
 
 public class RepeaterServiceTests
 {
@@ -34,7 +25,8 @@ public class RepeaterServiceTests
             BusType.RabbitMQ,
             new("rbs2-msg-type", new()
             {
-                { "RepeaterService.Tests.TestMessageOne, RepeaterService.Tests", "dest_topic_one" }
+                { "RepeaterService.Tests.TestMessageOne, RepeaterService.Tests", "dest_topic_one" },
+                { "RepeaterService.Tests.TestMessageTwo, RepeaterService.Tests", "dest_topic_one" }
             }));
 
         var repeat = new RepeaterConfig("rabbit_to_rabbit", sub, dest);
@@ -43,34 +35,46 @@ public class RepeaterServiceTests
         var repeaterServiceHost = new RepeaterServiceHost(settings);
         await repeaterServiceHost.StartAsync(new());
 
-        var handler = async (TestMessageOne x) =>
-        {
-            Console.WriteLine("Got message with content: " + x.Content);
-            await Task.CompletedTask;
-        };
-
-        var testRabbit = GetTestRabbitMQ(new() { handler });
+        var testRabbit = GetTestRabbitMQ();
         await testRabbit.Bus.Advanced.Topics.Subscribe("dest_topic_one");
 
         for (var i = 0; i < 10; i++)
         {
             Thread.Sleep(2000);
-            await testRabbit.Bus.Advanced.Topics.Publish(
-                "source_topic_one", new TestMessageOne($"This is a test message {i}"));
+
+            if (i % 2 == 0)
+            {
+                await testRabbit.Bus.Advanced.Topics.Publish(
+                    "source_topic_one", new TestMessageOne($"This is a test message {i}"));
+            }
+            else
+            {
+                await testRabbit.Bus.Advanced.Topics.Publish(
+                    "source_topic_one", new TestMessageTwo($"This is a test message {i}"));
+            }
         }
     }
 
-    public BuiltinHandlerActivator GetTestRabbitMQ(List<Func<TestMessageOne, Task>> handlers)
+    public BuiltinHandlerActivator GetTestRabbitMQ()
     {
         var activator = new BuiltinHandlerActivator();
-        foreach (var handler in handlers)
-            activator.Handle(handler);
+
+        activator.Handle<TestMessageOne>(async x =>
+        {
+            Console.WriteLine("Got TestMessageOne message with content: " + x.Content);
+            await Task.CompletedTask;
+        });
+
+        activator.Handle<TestMessageTwo>(async x =>
+        {
+            Console.WriteLine("Got TestMessageTwo message with content: " + x.Content);
+            await Task.CompletedTask;
+        });
 
         // Setting up source
         _ = Configure.With(activator)
             .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
             .Transport(t => t.UseRabbitMq("amqp://localhost", "integration_test_rabbit_mq_queue"))
-            .Serialization(s => s.UseNewtonsoftJson())
             .Start();
 
         return activator;
