@@ -36,7 +36,7 @@ internal class Repeater : IDisposable
                 destTopic = _repeat.Destination.TopicMapping.DestinationMaps[headerValue];
             }
 
-            Console.WriteLine("HEADER: " + String.Join(", ", x.Headers.Select(k => $"{k.Key} : {k.Value}")));
+            Console.WriteLine("HEADER: " + String.Join(", ", context.Headers.Select(k => $"{k.Key} : {k.Value}")));
             await Publish(destTopic, message, context.Headers).ConfigureAwait(false);
         });
 
