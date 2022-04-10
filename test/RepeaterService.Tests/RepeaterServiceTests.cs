@@ -1,6 +1,9 @@
+using FluentAssertions;
 using Rebus.Activation;
+using Rebus.Bus;
 using Rebus.Config;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
@@ -15,18 +18,22 @@ public class RepeaterServiceTests
     [Fact]
     public async Task Single_repeat_from_one_queue_to_another()
     {
+        var sourceTopic = Guid.NewGuid().ToString();
+        var destTopic = Guid.NewGuid().ToString();
+        var rabbitConnectionString = "amqp://localhost";
+
         var sub = new Subscription(
-           "amqp://localhost",
+           rabbitConnectionString,
            BusType.RabbitMQ,
-           new() { "source_topic_one" });
+           new() { sourceTopic });
 
         var dest = new Destination(
-            "amqp://localhost",
+            rabbitConnectionString,
             BusType.RabbitMQ,
             new("rbs2-msg-type", new()
             {
-                { "RepeaterService.Tests.TestMessageOne, RepeaterService.Tests", "dest_topic_one" },
-                { "RepeaterService.Tests.TestMessageTwo, RepeaterService.Tests", "dest_topic_one" }
+                { "RepeaterService.Tests.TestMessageOne, RepeaterService.Tests", destTopic },
+                { "RepeaterService.Tests.TestMessageTwo, RepeaterService.Tests", destTopic }
             }));
 
         var repeat = new RepeaterConfig("rabbit_to_rabbit", sub, dest);
@@ -35,48 +42,40 @@ public class RepeaterServiceTests
         var repeaterServiceHost = new RepeaterServiceHost(settings);
         await repeaterServiceHost.StartAsync(new());
 
-        var testRabbit = GetTestRabbitMQ();
-        await testRabbit.Bus.Advanced.Topics.Subscribe("dest_topic_one");
+        var activator = new BuiltinHandlerActivator();
+        var testOneMessages = new List<TestMessageOne>();
+        activator.Handle<TestMessageOne>(async x =>
+        {
+            testOneMessages.Add(x);
+            await Task.CompletedTask;
+        });
+
+        var testTwoMessages = new List<TestMessageTwo>();
+        activator.Handle<TestMessageTwo>(async x =>
+        {
+            testTwoMessages.Add(x);
+            await Task.CompletedTask;
+        });
+
+        _ = Configure.With(activator)
+            .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
+            .Transport(t => t.UseRabbitMq(rabbitConnectionString, "integration_test_rabbit_mq_queue"))
+            .Start();
+
+        await activator.Bus.Advanced.Topics.Subscribe(destTopic);
 
         for (var i = 0; i < 10; i++)
         {
-            Thread.Sleep(2000);
-
+            Thread.Sleep(200);
             if (i % 2 == 0)
-            {
-                await testRabbit.Bus.Advanced.Topics.Publish(
-                    "source_topic_one", new TestMessageOne($"This is a test message {i}"));
-            }
+                await activator.Bus.Advanced.Topics.Publish(
+                    sourceTopic, new TestMessageOne($"This is a test message {i}"));
             else
-            {
-                await testRabbit.Bus.Advanced.Topics.Publish(
-                    "source_topic_one", new TestMessageTwo($"This is a test message {i}"));
-            }
+                await activator.Bus.Advanced.Topics.Publish(
+                    sourceTopic, new TestMessageTwo($"This is a test message {i}"));
         }
-    }
 
-    public BuiltinHandlerActivator GetTestRabbitMQ()
-    {
-        var activator = new BuiltinHandlerActivator();
-
-        activator.Handle<TestMessageOne>(async x =>
-        {
-            Console.WriteLine("Got TestMessageOne message with content: " + x.Content);
-            await Task.CompletedTask;
-        });
-
-        activator.Handle<TestMessageTwo>(async x =>
-        {
-            Console.WriteLine("Got TestMessageTwo message with content: " + x.Content);
-            await Task.CompletedTask;
-        });
-
-        // Setting up source
-        _ = Configure.With(activator)
-            .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
-            .Transport(t => t.UseRabbitMq("amqp://localhost", "integration_test_rabbit_mq_queue"))
-            .Start();
-
-        return activator;
+        testOneMessages.Should().HaveCount(5);
+        testTwoMessages.Should().HaveCount(5);
     }
 }
