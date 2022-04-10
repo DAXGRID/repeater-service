@@ -28,7 +28,7 @@ internal class RepeaterServiceHost : BackgroundService
             BusType.RabbitMQ,
             new("rbs2-msg-type", new() { { "RepeaterService.TestRecordOne, RepeaterService", "dest_topic_one" } }));
 
-        var repeat = new Repeat("rabbit_to_rabbit", sub, dest);
+        var repeat = new RepeaterConfig("rabbit_to_rabbit", sub, dest);
         _settings = new(new() { repeat });
 
         _repeaters = _settings.Repeats.Select(x => new Repeater(x)).ToList();

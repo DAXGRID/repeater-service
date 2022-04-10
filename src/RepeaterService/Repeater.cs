@@ -12,9 +12,9 @@ internal class Repeater : IDisposable
 {
     private readonly BuiltinHandlerActivator _activatorSource;
     private readonly BuiltinHandlerActivator _activatorDest;
-    private readonly Repeat _repeat;
+    private readonly RepeaterConfig _repeat;
 
-    public Repeater(Repeat repeat)
+    public Repeater(RepeaterConfig repeat)
     {
         _activatorSource = new();
         _activatorDest = new();

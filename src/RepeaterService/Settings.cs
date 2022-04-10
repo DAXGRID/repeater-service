@@ -62,13 +62,13 @@ internal record Subscription
     }
 }
 
-internal record Repeat(string Name, Subscription Subscription, Destination Destination);
+internal record RepeaterConfig(string Name, Subscription Subscription, Destination Destination);
 
 internal record Settings
 {
-    public List<Repeat> Repeats { get; init; }
+    public List<RepeaterConfig> Repeats { get; init; }
 
-    public Settings(List<Repeat> repeats)
+    public Settings(List<RepeaterConfig> repeats)
     {
         if (repeats is null || repeats.Count == 0)
             throw new ArgumentException(
