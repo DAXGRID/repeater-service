@@ -56,7 +56,8 @@ internal class Repeater : IDisposable
             .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
             .Start();
 
-        await _activatorSource.Bus.Advanced.Topics.Subscribe(_repeat.Subscription.Topic).ConfigureAwait(false);
+        if (_repeat.Subscription.Create)
+            await _activatorSource.Bus.Advanced.Topics.Subscribe(_repeat.Subscription.Topic).ConfigureAwait(false);
     }
 
     private async Task Publish(string topic, JObject message, Dictionary<string, string> headers)
