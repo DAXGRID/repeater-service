@@ -19,6 +19,7 @@ internal record Subscription
     public string Type { get; init; } = string.Empty;
     public string Topic { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
+    public bool Create { get; init; }
 }
 
 internal record RepeaterConfig
