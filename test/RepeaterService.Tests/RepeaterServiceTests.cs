@@ -25,7 +25,7 @@ public class RepeaterServiceTests
         {
             ConnectionString = rabbitConnectionString,
             Type = "RabbitMQ",
-            Topics = new() { sourceTopic },
+            Topic = sourceTopic,
             Name = "my_test_subscription"
         };
 
