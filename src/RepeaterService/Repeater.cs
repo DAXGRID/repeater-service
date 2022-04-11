@@ -73,14 +73,13 @@ internal class Repeater : IDisposable
 
     private void SetupTransportSubscription(StandardConfigurer<ITransport> t)
     {
-        var inputQueueName = $"{_repeat.Name}_subscription";
         switch (_repeat.Subscription.Type)
         {
             case "RabbitMQ":
-                t.UseRabbitMq(_repeat.Subscription.ConnectionString, inputQueueName);
+                t.UseRabbitMq(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
                 break;
             case "AzureServiceBus":
-                t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, inputQueueName);
+                t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
                 break;
             default:
                 throw new ArgumentException($"{_repeat.Subscription.Type} is not valid.", nameof(_repeat.Subscription.Type));

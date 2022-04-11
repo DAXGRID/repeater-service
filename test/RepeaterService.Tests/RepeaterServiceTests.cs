@@ -1,6 +1,4 @@
-using FakeItEasy;
 using FluentAssertions;
-using Microsoft.Extensions.Options;
 using Rebus.Activation;
 using Rebus.Config;
 using System;
@@ -27,7 +25,8 @@ public class RepeaterServiceTests
         {
             ConnectionString = rabbitConnectionString,
             Type = "RabbitMQ",
-            Topics = new() { sourceTopic }
+            Topics = new() { sourceTopic },
+            Name = "my_test_subscription"
         };
 
         var dest = new Destination
