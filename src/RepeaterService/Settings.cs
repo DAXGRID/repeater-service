@@ -17,7 +17,7 @@ internal record Subscription
 {
     public string ConnectionString { get; init; } = string.Empty;
     public string Type { get; init; } = string.Empty;
-    public List<string> Topics { get; init; } = new();
+    public string Topic { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
 }
 
