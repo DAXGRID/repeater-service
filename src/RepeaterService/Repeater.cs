@@ -43,11 +43,11 @@ internal class Repeater : IDisposable
 
         // Setting up source
         _ = Configure.With(_activatorSource)
-            .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
-            .Transport(t => SetupTransportSubscription(t))
-            .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
-            .Options(o => o.Decorate<ISerializer>(c => new PlainJsonMessageSerializer(c.Get<ISerializer>())))
-            .Start();
+           .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
+           .Transport(t => SetupTransportSubscription(t))
+           .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
+           .Options(o => o.Decorate<ISerializer>(c => new PlainJsonMessageSerializer(c.Get<ISerializer>())))
+           .Start();
 
         // Setting up destination
         _ = Configure.With(_activatorDest)
@@ -78,7 +78,12 @@ internal class Repeater : IDisposable
                 t.UseRabbitMq(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
                 break;
             case "AzureServiceBus":
-                t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
+                if (_repeat.Subscription.Create)
+                    t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
+                else
+                    t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name)
+                        .DoNotCreateQueues()
+                        .DoNotCheckQueueConfiguration();
                 break;
             default:
                 throw new ArgumentException($"{_repeat.Subscription.Type} is not valid.", nameof(_repeat.Subscription.Type));
