@@ -2,10 +2,10 @@ using Newtonsoft.Json.Linq;
 using Rebus.Activation;
 using Rebus.Config;
 using Rebus.Messages;
+using Rebus.Routing.TransportMessages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Transport;
-using System;
 using System.Text;
 
 namespace RepeaterService;
@@ -25,7 +25,7 @@ internal class Repeater : IDisposable
 
     public async Task Start()
     {
-        _activatorSource.Handle<string>(async (_, context, message) =>
+        var handler = async (TransportMessage message) =>
         {
             var destTopic = string.Empty;
             if (_repeat.Destination.TopicMapping.HeaderName == "*")
@@ -34,20 +34,26 @@ internal class Repeater : IDisposable
             }
             else
             {
-                var headerValue = context.Headers[_repeat.Destination.TopicMapping.HeaderName];
+                var headerValue = message.Headers[_repeat.Destination.TopicMapping.HeaderName];
                 destTopic = _repeat.Destination.TopicMapping.DestinationMaps[headerValue];
             }
 
-            await Publish(destTopic, JObject.Parse(message), context.Headers).ConfigureAwait(false);
-        });
+            var messageBody = Encoding.UTF8.GetString(message.Body);
+            await Publish(destTopic, JObject.Parse(messageBody), message.Headers).ConfigureAwait(false);
+        };
 
         // Setting up source
         _ = Configure.With(_activatorSource)
-           .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
-           .Transport(t => SetupTransportSubscription(t))
-           .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
-           .Options(o => o.Decorate<ISerializer>(c => new PlainJsonMessageSerializer(c.Get<ISerializer>())))
-           .Start();
+            .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
+            .Transport(t => SetupTransportSubscription(t))
+            .Routing(r => r.AddTransportMessageForwarder(async tm =>
+            {
+                await handler(tm);
+                return ForwardAction.Ignore();
+            }))
+            .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
+            .Options(o => o.Decorate<ISerializer>(c => new PlainJsonMessageSerializer(c.Get<ISerializer>())))
+            .Start();
 
         // Setting up destination
         _ = Configure.With(_activatorDest)

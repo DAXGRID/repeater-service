@@ -26,7 +26,8 @@ public class RepeaterServiceTests
             ConnectionString = rabbitConnectionString,
             Type = "RabbitMQ",
             Topic = sourceTopic,
-            Name = "my_test_subscription"
+            Name = "my_test_subscription",
+            Create = true
         };
 
         var dest = new Destination
