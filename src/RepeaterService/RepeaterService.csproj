@@ -10,12 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.7.0" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="6.0.0" />
-    <PackageReference Include="Rebus" Version="6.6.2" />
+    <PackageReference Include="Rebus" Version="6.6.4" />
     <PackageReference Include="Rebus.AzureServiceBus" Version="9.0.8" />
     <PackageReference Include="Rebus.RabbitMq" Version="7.3.5" />
-    <PackageReference Include="System.Threading.Channels" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="6.0.1" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="6.0.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
     <PackageReference Include="Serilog.Settings.Configuration" Version="3.3.0" />
