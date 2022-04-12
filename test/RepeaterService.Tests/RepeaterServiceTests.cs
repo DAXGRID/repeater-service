@@ -54,9 +54,9 @@ public class RepeaterServiceTests
             Destination = dest,
         };
 
-        var logger = A.Fake<ILogger>();
+        var loggerFactory = A.Fake<ILoggerFactory>();
         var settings = Microsoft.Extensions.Options.Options.Create(new Settings() { Repeats = new() { repeat } });
-        var repeaterServiceHost = new RepeaterServiceHost(logger, settings);
+        var repeaterServiceHost = new RepeaterServiceHost(loggerFactory, settings);
         await repeaterServiceHost.StartAsync(new());
 
         var activator = new BuiltinHandlerActivator();
