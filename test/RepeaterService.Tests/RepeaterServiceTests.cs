@@ -1,4 +1,6 @@
+using FakeItEasy;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Rebus.Activation;
 using Rebus.Config;
 using System;
@@ -52,8 +54,9 @@ public class RepeaterServiceTests
             Destination = dest,
         };
 
+        var logger = A.Fake<ILogger>();
         var settings = Microsoft.Extensions.Options.Options.Create(new Settings() { Repeats = new() { repeat } });
-        var repeaterServiceHost = new RepeaterServiceHost(settings);
+        var repeaterServiceHost = new RepeaterServiceHost(logger, settings);
         await repeaterServiceHost.StartAsync(new());
 
         var activator = new BuiltinHandlerActivator();
