@@ -58,8 +58,6 @@ internal class Repeater : IDisposable
 
         if (_repeat.Subscription.Create)
             await _activatorSource.Bus.Advanced.Topics.Subscribe(_repeat.Subscription.Topic).ConfigureAwait(false);
-        else
-            await _activatorSource.Bus.Subscribe<string>().ConfigureAwait(false);
     }
 
     private async Task Publish(string topic, JObject message, Dictionary<string, string> headers)
