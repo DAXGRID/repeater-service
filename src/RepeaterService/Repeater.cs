@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 using Rebus.Activation;
 using Rebus.Config;
@@ -15,18 +16,21 @@ internal class Repeater : IDisposable
     private readonly BuiltinHandlerActivator _activatorSource;
     private readonly BuiltinHandlerActivator _activatorDest;
     private readonly RepeaterConfig _repeat;
+    private readonly ILogger _logger;
 
-    public Repeater(RepeaterConfig repeat)
+    public Repeater(RepeaterConfig repeat, ILogger logger)
     {
         _activatorSource = new();
         _activatorDest = new();
         _repeat = repeat;
+        _logger = logger;
     }
 
     public async Task Start()
     {
         var handler = async (TransportMessage message) =>
         {
+            _logger.LogInformation("Received message.");
             var destTopic = string.Empty;
             if (_repeat.Destination.TopicMapping.HeaderName == "*")
             {
