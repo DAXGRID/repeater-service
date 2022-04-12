@@ -9,10 +9,10 @@ internal class RepeaterServiceHost : BackgroundService
     private List<Repeater> _repeaters = new();
     private readonly ILogger _logger;
 
-    public RepeaterServiceHost(ILogger logger, IOptions<Settings> settings)
+    public RepeaterServiceHost(ILoggerFactory loggerFactory, IOptions<Settings> settings)
     {
-        _repeaters = settings.Value.Repeats.Select(x => new Repeater(x, logger)).ToList();
-        _logger = logger;
+        _repeaters = settings.Value.Repeats.Select(x => new Repeater(x, loggerFactory)).ToList();
+        _logger = loggerFactory.CreateLogger(nameof(RepeaterServiceHost));
     }
 
     protected async override Task ExecuteAsync(CancellationToken cToken)

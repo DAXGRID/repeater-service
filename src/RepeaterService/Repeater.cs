@@ -18,12 +18,12 @@ internal class Repeater : IDisposable
     private readonly RepeaterConfig _repeat;
     private readonly ILogger _logger;
 
-    public Repeater(RepeaterConfig repeat, ILogger logger)
+    public Repeater(RepeaterConfig repeat, ILoggerFactory loggerFactory)
     {
         _activatorSource = new();
         _activatorDest = new();
         _repeat = repeat;
-        _logger = logger;
+        _logger = loggerFactory.CreateLogger(nameof(Repeater));
     }
 
     public async Task Start()
