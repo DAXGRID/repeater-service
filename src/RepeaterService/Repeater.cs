@@ -7,6 +7,7 @@ using Rebus.Routing.TransportMessages;
 using Rebus.Serialization;
 using Rebus.Serialization.Json;
 using Rebus.Transport;
+using System.Globalization;
 using System.Text;
 
 namespace RepeaterService;
@@ -83,12 +84,12 @@ internal class Repeater : IDisposable
 
     private void SetupTransportSubscription(StandardConfigurer<ITransport> t)
     {
-        switch (_repeat.Subscription.Type)
+        switch (_repeat.Subscription.Type.ToLowerInvariant())
         {
-            case "RabbitMQ":
+            case BusType.RabbitMQ:
                 t.UseRabbitMq(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
                 break;
-            case "AzureServiceBus":
+            case BusType.AzureServiceBus:
                 if (_repeat.Subscription.Create)
                     t.UseAzureServiceBus(_repeat.Subscription.ConnectionString, _repeat.Subscription.Name);
                 else
@@ -103,17 +104,23 @@ internal class Repeater : IDisposable
 
     private void SetupTransportDestination(StandardConfigurer<ITransport> t)
     {
-        switch (_repeat.Destination.Type)
+        switch (_repeat.Destination.Type.ToLowerInvariant())
         {
-            case "RabbitMQ":
+            case BusType.RabbitMQ:
                 t.UseRabbitMqAsOneWayClient(_repeat.Destination.ConnectionString);
                 break;
-            case "AzureServiceBus":
+            case BusType.AzureServiceBus:
                 t.UseAzureServiceBusAsOneWayClient(_repeat.Destination.ConnectionString);
                 break;
             default:
                 throw new ArgumentException($"{_repeat.Destination} is not valid.", nameof(_repeat.Destination.Type));
         }
+    }
+
+    private static class BusType
+    {
+        public const string AzureServiceBus = "azureservicebus";
+        public const string RabbitMQ = "rabbitmq";
     }
 
     private class PlainJsonMessageSerializer : ISerializer
