@@ -13,9 +13,13 @@ public static class HostConfig
     public static IHost Configure()
     {
         var hostBuilder = new HostBuilder();
+      
         ConfigureApp(hostBuilder);
         ConfigureLogging(hostBuilder);
         ConfigureServices(hostBuilder);
+
+        hostBuilder.UseWindowsService();
+
         return hostBuilder.Build();
     }
 
@@ -43,7 +47,9 @@ public static class HostConfig
         hostBuilder.ConfigureServices((hostContext, services) =>
         {
             var loggingConfiguration = new ConfigurationBuilder()
-               .AddEnvironmentVariables().Build();
+                .AddEnvironmentVariables()
+                .AddJsonFile("appsettings.json")
+                .Build();
 
             services.AddLogging(loggingBuilder =>
             {
@@ -52,7 +58,6 @@ public static class HostConfig
                     .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
                     .MinimumLevel.Override("System", LogEventLevel.Warning)
                     .Enrich.FromLogContext()
-                    .WriteTo.Console(new CompactJsonFormatter())
                     .CreateLogger();
 
                 loggingBuilder.AddSerilog(logger, true);

@@ -43,12 +43,14 @@ internal class Repeater : IDisposable
             }
 
             var messageBody = Encoding.UTF8.GetString(message.Body);
+
+            _logger.LogInformation($"Sending message to: {_repeat.Destination.Type} topic: {destTopic}");
             await Publish(destTopic, JObject.Parse(messageBody), message.Headers).ConfigureAwait(false);
         };
 
         // Setting up source
         _ = Configure.With(_activatorSource)
-            .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
+            .Logging(l => l.MicrosoftExtensionsLogging(_logger))
             .Transport(t => SetupTransportSubscription(t))
             .Routing(r => r.AddTransportMessageForwarder(async tm =>
             {
@@ -61,7 +63,7 @@ internal class Repeater : IDisposable
 
         // Setting up destination
         _ = Configure.With(_activatorDest)
-            .Logging(l => l.Console(minLevel: Rebus.Logging.LogLevel.Warn))
+            .Logging(l => l.MicrosoftExtensionsLogging(_logger))
             .Transport(t => SetupTransportDestination(t))
             .Serialization(s => s.UseNewtonsoftJson(JsonInteroperabilityMode.PureJson))
             .Start();
